@@ -7,86 +7,93 @@ export const PRODUCT_CATEGORIES: Record<ProductCategory, {
   defaultLocation: string;
   averageFreshnessDays: number;
 }> = {
-  dairy: {
+  'Nabiał': {
     name: 'Nabiał',
-    icon: 'cheese',
+    icon: 'cow',
     color: '#FFF3E0',
     defaultLocation: 'Lodówka',
     averageFreshnessDays: 7,
   },
-  meat: {
-    name: 'Mięso',
-    icon: 'food-steak',
+  'Mięso i ryby': {
+    name: 'Mięso i ryby',
+    icon: 'fish',
     color: '#FFEBEE',
     defaultLocation: 'Lodówka',
     averageFreshnessDays: 3,
   },
-  vegetables: {
-    name: 'Warzywa',
+  'Warzywa i owoce': {
+    name: 'Warzywa i owoce',
     icon: 'carrot',
     color: '#E8F5E9',
     defaultLocation: 'Lodówka',
     averageFreshnessDays: 5,
   },
-  fruits: {
-    name: 'Owoce',
-    icon: 'food-apple',
-    color: '#FFF8E1',
-    defaultLocation: 'Kuchnia',
-    averageFreshnessDays: 5,
-  },
-  bakery: {
+  'Pieczywo': {
     name: 'Pieczywo',
     icon: 'bread-slice',
     color: '#EFEBE9',
     defaultLocation: 'Kuchnia',
     averageFreshnessDays: 3,
   },
-  pantry: {
-    name: 'Spiżarnia',
-    icon: 'pasta',
+  'Przyprawy': {
+    name: 'Przyprawy',
+    icon: 'spice-rack',
     color: '#F3E5F5',
-    defaultLocation: 'Spiżarnia',
-    averageFreshnessDays: 180,
+    defaultLocation: 'Kuchnia',
+    averageFreshnessDays: 365,
   },
-  beverages: {
+  'Napoje': {
     name: 'Napoje',
-    icon: 'bottle-soda',
+    icon: 'bottle-wine',
     color: '#E1F5FE',
     defaultLocation: 'Lodówka',
     averageFreshnessDays: 30,
   },
-  frozen: {
+  'Słodycze': {
+    name: 'Słodycze',
+    icon: 'candy',
+    color: '#FFF9C4',
+    defaultLocation: 'Kuchnia',
+    averageFreshnessDays: 30,
+  },
+  'Konserwy': {
+    name: 'Konserwy',
+    icon: 'can',
+    color: '#EFEBE9',
+    defaultLocation: 'Spiżarnia',
+    averageFreshnessDays: 180,
+  },
+  'Mrożonki': {
     name: 'Mrożonki',
     icon: 'snowflake',
     color: '#E3F2FD',
     defaultLocation: 'Zamrażarka',
     averageFreshnessDays: 90,
   },
-  condiments: {
-    name: 'Przyprawy',
-    icon: 'shaker',
+  'Kosmetyki': {
+    name: 'Kosmetyki',
+    icon: 'lipstick',
     color: '#FCE4EC',
-    defaultLocation: 'Kuchnia',
+    defaultLocation: 'Łazienka',
     averageFreshnessDays: 365,
   },
-  snacks: {
-    name: 'Przekąski',
-    icon: 'cookie',
-    color: '#FFF9C4',
-    defaultLocation: 'Kuchnia',
-    averageFreshnessDays: 30,
-  },
-  household: {
-    name: 'Art. gospodarcze',
+  'Środki czystości': {
+    name: 'Środki czystości',
     icon: 'spray-bottle',
     color: '#F5F5F5',
     defaultLocation: 'Łazienka',
     averageFreshnessDays: 730,
   },
-  other: {
+  'Leki': {
+    name: 'Leki',
+    icon: 'pill',
+    color: '#E8F5E9',
+    defaultLocation: 'Łazienka',
+    averageFreshnessDays: 365,
+  },
+  'Inne': {
     name: 'Inne',
-    icon: 'dots-horizontal',
+    icon: 'package-variant',
     color: '#EEEEEE',
     defaultLocation: 'Kuchnia',
     averageFreshnessDays: 30,
@@ -107,14 +114,14 @@ export const STORAGE_LOCATIONS = [
 ];
 
 export const QUICK_ADD_SUGGESTIONS = [
-  { name: 'Mleko', category: 'dairy', unit: 'l' },
-  { name: 'Chleb', category: 'bakery', unit: 'pcs' },
-  { name: 'Jajka', category: 'dairy', unit: 'pcs' },
-  { name: 'Masło', category: 'dairy', unit: 'g' },
-  { name: 'Ser żółty', category: 'dairy', unit: 'g' },
-  { name: 'Pomidory', category: 'vegetables', unit: 'kg' },
-  { name: 'Ziemniaki', category: 'vegetables', unit: 'kg' },
-  { name: 'Jabłka', category: 'fruits', unit: 'kg' },
-  { name: 'Banany', category: 'fruits', unit: 'kg' },
-  { name: 'Kurczak', category: 'meat', unit: 'kg' },
+  { name: 'Mleko', category: 'Nabiał', unit: 'l' },
+  { name: 'Chleb', category: 'Pieczywo', unit: 'pcs' },
+  { name: 'Jajka', category: 'Nabiał', unit: 'pcs' },
+  { name: 'Masło', category: 'Nabiał', unit: 'g' },
+  { name: 'Ser żółty', category: 'Nabiał', unit: 'g' },
+  { name: 'Pomidory', category: 'Warzywa i owoce', unit: 'kg' },
+  { name: 'Ziemniaki', category: 'Warzywa i owoce', unit: 'kg' },
+  { name: 'Jabłka', category: 'Warzywa i owoce', unit: 'kg' },
+  { name: 'Banany', category: 'Warzywa i owoce', unit: 'kg' },
+  { name: 'Kurczak', category: 'Mięso i ryby', unit: 'kg' },
 ];

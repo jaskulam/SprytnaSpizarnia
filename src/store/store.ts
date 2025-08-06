@@ -6,6 +6,7 @@ import recipesReducer from './slices/recipesSlice';
 import familyReducer from './slices/familySlice';
 import notificationsReducer from './slices/notificationsSlice';
 import preferencesReducer from './slices/preferencesSlice';
+import offlineReducer from './slices/offlineSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     family: familyReducer,
     notifications: notificationsReducer,
     preferences: preferencesReducer,
+    offline: offlineReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

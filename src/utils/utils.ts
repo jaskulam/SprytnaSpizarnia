@@ -1,431 +1,225 @@
-// utils.ts - Funkcje pomocnicze dla aplikacji Sprytna Spiżarnia
+// General utility functions for Sprytna Spiżarnia
 
-import { Product, ProductCategory, Recipe, ShoppingListItem } from '../types/models';
+import { Platform, Dimensions, PixelRatio } from 'react-native';
+import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 
-// ============== FORMATOWANIE DAT ==============
-
-/**
- * Formatuje datę do polskiego formatu
- */
-export const formatDate = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+// String utilities
+export const capitalize = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-/**
- * Formatuje datę z czasem
- */
-export const formatDateTime = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + '...';
 };
 
-/**
- * Formatuje datę do formatu względnego (np. "za 3 dni", "wczoraj")
- */
-export const formatRelativeDate = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  const diffTime = d.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) return 'Dzisiaj';
-  if (diffDays === 1) return 'Jutro';
-  if (diffDays === -1) return 'Wczoraj';
-  if (diffDays > 0 && diffDays <= 7) return `Za ${diffDays} dni`;
-  if (diffDays < 0 && diffDays >= -7) return `${Math.abs(diffDays)} dni temu`;
-  
-  return formatDate(d);
+export const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 };
 
-/**
- * Oblicza dni do daty ważności
- */
-export const getDaysUntilExpiry = (expiryDate: Date | string): number => {
-  const d = typeof expiryDate === 'string' ? new Date(expiryDate) : expiryDate;
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  d.setHours(0, 0, 0, 0);
-  
-  const diffTime = d.getTime() - now.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-};
-
-/**
- * Sprawdza czy produkt jest przeterminowany
- */
-export const isExpired = (expiryDate: Date | string): boolean => {
-  return getDaysUntilExpiry(expiryDate) < 0;
-};
-
-/**
- * Sprawdza czy produkt wkrótce się przeterminuje
- */
-export const isExpiringSoon = (expiryDate: Date | string, daysThreshold: number = 3): boolean => {
-  const days = getDaysUntilExpiry(expiryDate);
-  return days >= 0 && days <= daysThreshold;
-};
-
-// ============== ŚWIEŻOŚĆ PRODUKTÓW ==============
-
-/**
- * Określa status świeżości produktu
- */
-export type FreshnessStatus = 'expired' | 'expiring-soon' | 'fresh';
-
-export const getFreshnessStatus = (expiryDate: Date | string, daysThreshold: number = 3): FreshnessStatus => {
-  if (isExpired(expiryDate)) return 'expired';
-  if (isExpiringSoon(expiryDate, daysThreshold)) return 'expiring-soon';
-  return 'fresh';
-};
-
-/**
- * Zwraca kolor dla statusu świeżości
- */
-export const getFreshnessColor = (status: FreshnessStatus): string => {
-  switch (status) {
-    case 'expired': return 'red';
-    case 'expiring-soon': return 'orange';
-    case 'fresh': return 'green';
+export const generateRandomString = (length: number = 8): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return result;
 };
 
-/**
- * Zwraca klasę CSS dla statusu świeżości
- */
-export const getFreshnessClass = (status: FreshnessStatus): string => {
-  switch (status) {
-    case 'expired': return 'bg-red-500';
-    case 'expiring-soon': return 'bg-orange-500';
-    case 'fresh': return 'bg-green-500';
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export const isValidPhoneNumber = (phone: string): boolean => {
+  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+  return phoneRegex.test(phone.replace(/\s+/g, ''));
+};
+
+export const formatPhoneNumber = (phone: string): string => {
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 9) {
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
   }
+  if (cleaned.length === 11 && cleaned.startsWith('48')) {
+    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{3})/, '+$1 $2 $3 $4');
+  }
+  return phone;
 };
 
-// ============== SORTOWANIE I FILTROWANIE ==============
+export const isValidUuid = (uuid: string): boolean => {
+  return uuidValidate(uuid) && uuidVersion(uuid) === 4;
+};
 
-/**
- * Sortuje produkty według daty ważności
- */
-export const sortProductsByExpiry = (products: Product[]): Product[] => {
-  return [...products].sort((a, b) => {
-    const dateA = new Date(a.expiryDate).getTime();
-    const dateB = new Date(b.expiryDate).getTime();
-    return dateA - dateB;
+export const sanitizeFilename = (filename: string): string => {
+  return filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+};
+
+// Number utilities
+export const formatNumber = (num: number, decimals: number = 2): string => {
+  return num.toFixed(decimals).replace(/\.?0+$/, '');
+};
+
+export const formatCurrency = (amount: number, currency: string = 'PLN'): string => {
+  return new Intl.NumberFormat('pl-PL', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount);
+};
+
+export const formatPercentage = (value: number, total: number): string => {
+  if (total === 0) return '0%';
+  const percentage = (value / total) * 100;
+  return `${formatNumber(percentage, 1)}%`;
+};
+
+export const clamp = (value: number, min: number, max: number): number => {
+  return Math.min(Math.max(value, min), max);
+};
+
+export const lerp = (start: number, end: number, factor: number): number => {
+  return start + (end - start) * factor;
+};
+
+export const roundToNearest = (value: number, nearest: number): number => {
+  return Math.round(value / nearest) * nearest;
+};
+
+// Array utilities
+export const chunk = <T>(array: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+};
+
+export const shuffle = <T>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+export const unique = <T>(array: T[]): T[] => {
+  return [...new Set(array)];
+};
+
+export const uniqueBy = <T>(array: T[], key: keyof T): T[] => {
+  const seen = new Set();
+  return array.filter(item => {
+    const value = item[key];
+    if (seen.has(value)) {
+      return false;
+    }
+    seen.add(value);
+    return true;
   });
 };
 
-/**
- * Filtruje produkty według lokalizacji
- */
-export const filterProductsByLocation = (products: Product[], location: string): Product[] => {
-  return products.filter(p => p.location === location);
+export const groupBy = <T, K extends keyof T>(array: T[], key: K): Record<string, T[]> => {
+  return array.reduce((groups, item) => {
+    const groupKey = String(item[key]);
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+    }
+    groups[groupKey].push(item);
+    return groups;
+  }, {} as Record<string, T[]>);
 };
 
-/**
- * Filtruje produkty według kategorii
- */
-export const filterProductsByCategory = (products: Product[], category: ProductCategory): Product[] => {
-  return products.filter(p => p.category === category);
+export const sortBy = <T>(array: T[], key: keyof T, order: 'asc' | 'desc' = 'asc'): T[] => {
+  return [...array].sort((a, b) => {
+    const aVal = a[key];
+    const bVal = b[key];
+    
+    if (aVal < bVal) return order === 'asc' ? -1 : 1;
+    if (aVal > bVal) return order === 'asc' ? 1 : -1;
+    return 0;
+  });
 };
 
-/**
- * Grupuje produkty według lokalizacji
- */
-export const groupProductsByLocation = (products: Product[]): Record<string, Product[]> => {
-  return products.reduce((acc, product) => {
-    const location = product.location || 'Inne';
-    if (!acc[location]) acc[location] = [];
-    acc[location].push(product);
-    return acc;
-  }, {} as Record<string, Product[]>);
+export const findLast = <T>(array: T[], predicate: (item: T) => boolean): T | undefined => {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i])) {
+      return array[i];
+    }
+  }
+  return undefined;
 };
 
-/**
- * Grupuje produkty według statusu świeżości
- */
-export const groupProductsByFreshness = (products: Product[], daysThreshold: number = 3): {
-  expired: Product[];
-  expiringSoon: Product[];
-  fresh: Product[];
-} => {
-  const result = {
-    expired: [] as Product[],
-    expiringSoon: [] as Product[],
-    fresh: [] as Product[]
-  };
+// Object utilities
+export const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
+  const result = { ...obj };
+  keys.forEach(key => delete result[key]);
+  return result;
+};
+
+export const pick = <T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+  const result = {} as Pick<T, K>;
+  keys.forEach(key => {
+    if (key in obj) {
+      result[key] = obj[key];
+    }
+  });
+  return result;
+};
+
+export const deepMerge = <T extends object>(target: T, source: Partial<T>): T => {
+  const result = { ...target };
   
-  products.forEach(product => {
-    const status = getFreshnessStatus(product.expiryDate, daysThreshold);
-    switch (status) {
-      case 'expired':
-        result.expired.push(product);
-        break;
-      case 'expiring-soon':
-        result.expiringSoon.push(product);
-        break;
-      case 'fresh':
-        result.fresh.push(product);
-        break;
+  Object.keys(source).forEach(key => {
+    const sourceValue = source[key as keyof T];
+    const targetValue = result[key as keyof T];
+    
+    if (isObject(sourceValue) && isObject(targetValue)) {
+      result[key as keyof T] = deepMerge(targetValue, sourceValue);
+    } else {
+      result[key as keyof T] = sourceValue as T[keyof T];
     }
   });
   
   return result;
 };
 
-// ============== WYSZUKIWANIE ==============
-
-/**
- * Wyszukuje produkty po nazwie
- */
-export const searchProducts = (products: Product[], query: string): Product[] => {
-  const normalizedQuery = query.toLowerCase().trim();
-  if (!normalizedQuery) return products;
-  
-  return products.filter(product => 
-    product.name.toLowerCase().includes(normalizedQuery) ||
-    product.category?.toLowerCase().includes(normalizedQuery) ||
-    product.location?.toLowerCase().includes(normalizedQuery) ||
-    product.tags?.some(tag => tag.toLowerCase().includes(normalizedQuery))
-  );
-};
-
-/**
- * Wyszukuje przepisy po składnikach
- */
-export const searchRecipesByIngredients = (recipes: Recipe[], ingredients: string[]): Recipe[] => {
-  const normalizedIngredients = ingredients.map(i => i.toLowerCase());
-  
-  return recipes.filter(recipe => {
-    const recipeIngredients = recipe.ingredients.map(i => i.name.toLowerCase());
-    return normalizedIngredients.some(ingredient => 
-      recipeIngredients.some(recipeIngredient => 
-        recipeIngredient.includes(ingredient)
-      )
-    );
-  });
-};
-
-// ============== WALIDACJA ==============
-
-/**
- * Waliduje adres email
- */
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-/**
- * Waliduje hasło według wymagań
- */
-export const validatePassword = (password: string): {
-  isValid: boolean;
-  errors: string[];
-} => {
-  const errors: string[] = [];
-  
-  if (password.length < 8) {
-    errors.push('Hasło musi mieć co najmniej 8 znaków');
-  }
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Hasło musi zawierać co najmniej jedną dużą literę');
-  }
-  if (!/[a-z]/.test(password)) {
-    errors.push('Hasło musi zawierać co najmniej jedną małą literę');
-  }
-  if (!/[0-9]/.test(password)) {
-    errors.push('Hasło musi zawierać co najmniej jedną cyfrę');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-/**
- * Waliduje kod kreskowy
- */
-export const validateBarcode = (barcode: string): boolean => {
-  // EAN-13 lub EAN-8
-  return /^[0-9]{8}$/.test(barcode) || /^[0-9]{13}$/.test(barcode);
-};
-
-// ============== FORMATOWANIE TEKSTU ==============
-
-/**
- * Formatuje ilość produktu
- */
-export const formatQuantity = (quantity: string | number, unit?: string): string => {
-  if (unit) {
-    return `${quantity} ${unit}`;
-  }
-  return quantity.toString();
-};
-
-/**
- * Formatuje cenę
- */
-export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency: 'PLN'
-  }).format(price / 100); // cena w groszach
-};
-
-/**
- * Skraca tekst do określonej długości
- */
-export const truncateText = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 3) + '...';
-};
-
-/**
- * Kapitalizuje pierwszą literę
- */
-export const capitalize = (text: string): string => {
-  if (!text) return '';
-  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-};
-
-/**
- * Normalizuje tekst do wyszukiwania
- */
-export const normalizeText = (text: string): string => {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // usuwa znaki diakrytyczne
-    .replace(/[^a-z0-9\s]/g, '') // usuwa znaki specjalne
-    .trim();
-};
-
-// ============== LISTA ZAKUPÓW ==============
-
-/**
- * Generuje listę zakupów na podstawie brakujących produktów
- */
-export const generateShoppingList = (
-  products: Product[], 
-  minQuantityThreshold: number = 1
-): ShoppingListItem[] => {
-  const lowStockProducts = products.filter(p => {
-    const quantity = parseInt(p.quantity) || 0;
-    return quantity <= minQuantityThreshold;
-  });
-  
-  return lowStockProducts.map(product => ({
-    id: generateId(),
-    name: product.name,
-    quantity: product.quantity,
-    checked: false,
-    addedBy: 'System',
-    addedAt: new Date(),
-    category: product.category,
-    productId: product.id
-  }));
-};
-
-/**
- * Łączy duplikaty na liście zakupów
- */
-export const mergeDuplicateItems = (items: ShoppingListItem[]): ShoppingListItem[] => {
-  const merged = new Map<string, ShoppingListItem>();
-  
-  items.forEach(item => {
-    const key = normalizeText(item.name);
-    if (merged.has(key)) {
-      const existing = merged.get(key)!;
-      // Łączymy ilości jeśli są liczbowe
-      const existingQty = parseInt(existing.quantity || '1');
-      const newQty = parseInt(item.quantity || '1');
-      existing.quantity = (existingQty + newQty).toString();
-    } else {
-      merged.set(key, { ...item });
-    }
-  });
-  
-  return Array.from(merged.values());
-};
-
-// ============== STATYSTYKI ==============
-
-/**
- * Oblicza statystyki produktów
- */
-export const calculateProductStats = (products: Product[]) => {
-  const total = products.length;
-  const expired = products.filter(p => isExpired(p.expiryDate)).length;
-  const expiringSoon = products.filter(p => isExpiringSoon(p.expiryDate)).length;
-  const fresh = total - expired - expiringSoon;
-  
-  const byLocation = products.reduce((acc, p) => {
-    const loc = p.location || 'Inne';
-    acc[loc] = (acc[loc] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  const byCategory = products.reduce((acc, p) => {
-    const cat = p.category || 'Inne';
-    acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  return {
-    total,
-    expired,
-    expiringSoon,
-    fresh,
-    byLocation,
-    byCategory,
-    expiryRate: total > 0 ? (expired / total) * 100 : 0,
-    freshnessScore: total > 0 ? (fresh / total) * 100 : 100
-  };
-};
-
-/**
- * Oblicza wartość marnowanych produktów
- */
-export const calculateWasteValue = (
-  expiredProducts: Product[], 
-  estimatedPrices: Record<string, number>
-): number => {
-  return expiredProducts.reduce((total, product) => {
-    const price = estimatedPrices[product.id] || 0;
-    return total + price;
-  }, 0);
-};
-
-// ============== POMOCNICZE ==============
-
-/**
- * Generuje unikalny ID
- */
-export const generateId = (): string => {
-  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-/**
- * Głębokie klonowanie obiektu
- */
 export const deepClone = <T>(obj: T): T => {
-  return JSON.parse(JSON.stringify(obj));
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return new Date(obj.getTime()) as T;
+  if (obj instanceof Array) return obj.map(item => deepClone(item)) as T;
+  if (typeof obj === 'object') {
+    const cloned = {} as T;
+    Object.keys(obj).forEach(key => {
+      cloned[key as keyof T] = deepClone(obj[key as keyof T]);
+    });
+    return cloned;
+  }
+  return obj;
 };
 
-/**
- * Debounce funkcji
- */
+export const isObject = (item: any): item is object => {
+  return item !== null && typeof item === 'object' && !Array.isArray(item);
+};
+
+export const isEmpty = (value: any): boolean => {
+  if (value == null) return true;
+  if (typeof value === 'string') return value.length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'object') return Object.keys(value).length === 0;
+  return false;
+};
+
+export const hasOwnProperty = <T extends object>(obj: T, prop: string): prop is keyof T => {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+};
+
+// Function utilities
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -438,9 +232,6 @@ export const debounce = <T extends (...args: any[]) => any>(
   };
 };
 
-/**
- * Throttle funkcji
- */
 export const throttle = <T extends (...args: any[]) => any>(
   func: T,
   limit: number
@@ -456,206 +247,331 @@ export const throttle = <T extends (...args: any[]) => any>(
   };
 };
 
-/**
- * Sprawdza czy aplikacja jest w trybie development
- */
-export const isDevelopment = (): boolean => {
-  return process.env.NODE_ENV === 'development';
+export const memoize = <T extends (...args: any[]) => any>(func: T): T => {
+  const cache = new Map();
+  
+  return ((...args: Parameters<T>) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = func(...args);
+    cache.set(key, result);
+    return result;
+  }) as T;
 };
 
-/**
- * Sprawdza czy aplikacja jest w trybie produkcji
- */
-export const isProduction = (): boolean => {
-  return process.env.NODE_ENV === 'production';
-};
-
-/**
- * Loguje w trybie development
- */
-export const devLog = (...args: any[]): void => {
-  if (isDevelopment()) {
-    console.log('[DEV]', ...args);
-  }
-};
-
-// ============== OBRAZY ==============
-
-/**
- * Kompresuje obraz przed wysłaniem
- */
-export const compressImage = async (
-  file: File,
-  maxWidth: number = 1920,
-  maxHeight: number = 1080,
-  quality: number = 0.8
-): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        
-        // Skalowanie zachowując proporcje
-        if (width > height) {
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Błąd kompresji obrazu'));
-          },
-          'image/webp',
-          quality
-        );
-      };
-    };
-    reader.onerror = reject;
-  });
-};
-
-/**
- * Konwertuje obraz do base64
- */
-export const imageToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-  });
-};
-
-// ============== LOCALSTORAGE ==============
-
-/**
- * Bezpieczny zapis do localStorage
- */
-export const saveToLocalStorage = (key: string, value: any): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error('Błąd zapisu do localStorage:', error);
-  }
-};
-
-/**
- * Bezpieczny odczyt z localStorage
- */
-export const getFromLocalStorage = <T>(key: string, defaultValue: T): T => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (error) {
-    console.error('Błąd odczytu z localStorage:', error);
-    return defaultValue;
-  }
-};
-
-/**
- * Usuwa z localStorage
- */
-export const removeFromLocalStorage = (key: string): void => {
-  try {
-    localStorage.removeItem(key);
-  } catch (error) {
-    console.error('Błąd usuwania z localStorage:', error);
-  }
-};
-
-// ============== SIEĆ ==============
-
-/**
- * Sprawdza czy jest połączenie z internetem
- */
-export const isOnline = (): boolean => {
-  return navigator.onLine;
-};
-
-/**
- * Retry wrapper dla operacji sieciowych
- */
-export const retryOperation = async <T>(
-  operation: () => Promise<T>,
-  maxAttempts: number = 3,
+export const retry = async <T>(
+  func: () => Promise<T>,
+  retries: number = 3,
   delay: number = 1000
 ): Promise<T> => {
-  let lastError: Error | undefined;
+  try {
+    return await func();
+  } catch (error) {
+    if (retries > 0) {
+      await sleep(delay);
+      return retry(func, retries - 1, delay * 2); // exponential backoff
+    }
+    throw error;
+  }
+};
+
+export const sleep = (ms: number): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+// Platform utilities
+export const isIOS = (): boolean => Platform.OS === 'ios';
+export const isAndroid = (): boolean => Platform.OS === 'android';
+export const isWeb = (): boolean => Platform.OS === 'web';
+
+export const getScreenDimensions = () => {
+  const { width, height } = Dimensions.get('window');
+  return { width, height };
+};
+
+export const getPixelRatio = (): number => PixelRatio.get();
+
+export const isTablet = (): boolean => {
+  const { width, height } = getScreenDimensions();
+  const aspectRatio = Math.max(width, height) / Math.min(width, height);
+  return aspectRatio < 1.6 && Math.min(width, height) > 600;
+};
+
+export const getDeviceType = (): 'phone' | 'tablet' => {
+  return isTablet() ? 'tablet' : 'phone';
+};
+
+// Validation utilities
+export const isValidDate = (date: any): date is Date => {
+  return date instanceof Date && !isNaN(date.getTime());
+};
+
+export const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const isValidJSON = (str: string): boolean => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const validateRequired = (value: any): boolean => {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return value != null;
+};
+
+export const validateMinLength = (value: string, minLength: number): boolean => {
+  return value.length >= minLength;
+};
+
+export const validateMaxLength = (value: string, maxLength: number): boolean => {
+  return value.length <= maxLength;
+};
+
+export const validateNumericRange = (value: number, min: number, max: number): boolean => {
+  return value >= min && value <= max;
+};
+
+// Color utilities
+export const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+};
+
+export const rgbToHex = (r: number, g: number, b: number): string => {
+  return "#" + [r, g, b].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  }).join("");
+};
+
+export const adjustColorOpacity = (color: string, opacity: number): string => {
+  const rgb = hexToRgb(color);
+  if (!rgb) return color;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+};
+
+// Storage size utilities
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
   
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error as Error;
-      if (i < maxAttempts - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+export const bytesToMB = (bytes: number): number => {
+  return bytes / (1024 * 1024);
+};
+
+// Error handling utilities
+export const safeJsonParse = <T>(json: string, fallback: T): T => {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return fallback;
+  }
+};
+
+export const safeAsyncCall = async <T>(
+  asyncFunc: () => Promise<T>,
+  fallback: T
+): Promise<T> => {
+  try {
+    return await asyncFunc();
+  } catch {
+    return fallback;
+  }
+};
+
+export const createErrorHandler = (context: string) => {
+  return (error: Error) => {
+    console.error(`[${context}] Error:`, error);
+    // Here you could integrate with crash reporting service
+  };
+};
+
+// Random utilities
+export const getRandomElement = <T>(array: T[]): T => {
+  return array[Math.floor(Math.random() * array.length)];
+};
+
+export const getRandomElements = <T>(array: T[], count: number): T[] => {
+  const shuffled = shuffle(array);
+  return shuffled.slice(0, Math.min(count, array.length));
+};
+
+export const randomBetween = (min: number, max: number): number => {
+  return Math.random() * (max - min) + min;
+};
+
+export const randomIntBetween = (min: number, max: number): number => {
+  return Math.floor(randomBetween(min, max + 1));
+};
+
+// Performance utilities
+export const measureTime = async <T>(func: () => Promise<T>): Promise<{ result: T; time: number }> => {
+  const start = Date.now();
+  const result = await func();
+  const time = Date.now() - start;
+  return { result, time };
+};
+
+export const createBatchProcessor = <T, R>(
+  processor: (batch: T[]) => Promise<R[]>,
+  batchSize: number = 10,
+  delay: number = 100
+) => {
+  return async (items: T[]): Promise<R[]> => {
+    const results: R[] = [];
+    const batches = chunk(items, batchSize);
+    
+    for (const batch of batches) {
+      const batchResults = await processor(batch);
+      results.push(...batchResults);
+      
+      if (delay > 0 && batches.indexOf(batch) < batches.length - 1) {
+        await sleep(delay);
       }
     }
-  }
-  
-  throw lastError;
+    
+    return results;
+  };
 };
 
-// ============== EKSPORT DANYCH ==============
+// Environment utilities
+export const isDevelopment = (): boolean => __DEV__;
+export const isProduction = (): boolean => !__DEV__;
 
-/**
- * Eksportuje dane do JSON
- */
-export const exportToJSON = (data: any, filename: string): void => {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filename}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
+// Type guards
+export const isString = (value: any): value is string => typeof value === 'string';
+export const isNumber = (value: any): value is number => typeof value === 'number' && !isNaN(value);
+export const isBoolean = (value: any): value is boolean => typeof value === 'boolean';
+export const isArray = (value: any): value is any[] => Array.isArray(value);
+export const isFunction = (value: any): value is Function => typeof value === 'function';
 
-/**
- * Eksportuje dane do CSV
- */
-export const exportToCSV = (data: any[], filename: string): void => {
-  if (data.length === 0) return;
+// Constants
+export const EMPTY_ARRAY: readonly never[] = [];
+export const EMPTY_OBJECT: Readonly<{}> = {};
+
+// Default export with all utilities
+export default {
+  // String
+  capitalize,
+  truncateText,
+  slugify,
+  generateRandomString,
+  isValidEmail,
+  isValidPhoneNumber,
+  formatPhoneNumber,
+  isValidUuid,
+  sanitizeFilename,
   
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        return typeof value === 'string' && value.includes(',') 
-          ? `"${value}"` 
-          : value;
-      }).join(',')
-    )
-  ].join('\n');
+  // Number
+  formatNumber,
+  formatCurrency,
+  formatPercentage,
+  clamp,
+  lerp,
+  roundToNearest,
   
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filename}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  // Array
+  chunk,
+  shuffle,
+  unique,
+  uniqueBy,
+  groupBy,
+  sortBy,
+  findLast,
+  
+  // Object
+  omit,
+  pick,
+  deepMerge,
+  deepClone,
+  isObject,
+  isEmpty,
+  hasOwnProperty,
+  
+  // Function
+  debounce,
+  throttle,
+  memoize,
+  retry,
+  sleep,
+  
+  // Platform
+  isIOS,
+  isAndroid,
+  isWeb,
+  getScreenDimensions,
+  getPixelRatio,
+  isTablet,
+  getDeviceType,
+  
+  // Validation
+  isValidDate,
+  isValidUrl,
+  isValidJSON,
+  validateRequired,
+  validateMinLength,
+  validateMaxLength,
+  validateNumericRange,
+  
+  // Color
+  hexToRgb,
+  rgbToHex,
+  adjustColorOpacity,
+  
+  // Storage
+  formatFileSize,
+  bytesToMB,
+  
+  // Error handling
+  safeJsonParse,
+  safeAsyncCall,
+  createErrorHandler,
+  
+  // Random
+  getRandomElement,
+  getRandomElements,
+  randomBetween,
+  randomIntBetween,
+  
+  // Performance
+  measureTime,
+  createBatchProcessor,
+  
+  // Environment
+  isDevelopment,
+  isProduction,
+  
+  // Type guards
+  isString,
+  isNumber,
+  isBoolean,
+  isArray,
+  isFunction,
+  
+  // Constants
+  EMPTY_ARRAY,
+  EMPTY_OBJECT,
 };

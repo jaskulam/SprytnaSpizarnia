@@ -152,52 +152,6 @@ export class FirestoreService {
     }
   }
 
-  // Recipes
-  static async getRecipes(filters?: {
-    ingredients?: string[];
-    diet?: string[];
-    maxTime?: number;
-    difficulty?: string;
-  }): Promise<Recipe[]> {
-    try {
-      let query: FirebaseFirestoreTypes.Query = firestore()
-        .collection(collections.recipes);
-
-      if (filters?.diet && filters.diet.length > 0) {
-        query = query.where('diet', 'array-contains-any', filters.diet);
-      }
-
-      if (filters?.difficulty) {
-        query = query.where('difficulty', '==', filters.difficulty);
-      }
-
-      if (filters?.maxTime) {
-        query = query.where('prepTime', '<=', filters.maxTime);
-      }
-
-      const snapshot = await query.get();
-      let recipes = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Recipe));
-
-      // Filtrowanie po składnikach (client-side)
-      if (filters?.ingredients && filters.ingredients.length > 0) {
-        recipes = recipes.filter(recipe => {
-          const recipeIngredients = recipe.ingredients.map(i => i.name.toLowerCase());
-          return filters.ingredients!.some(ingredient => 
-            recipeIngredients.includes(ingredient.toLowerCase())
-          );
-        });
-      }
-
-      return recipes;
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-      throw error;
-    }
-  }
-
   // Meal Plans
   static async getMealPlans(familyId: string, startDate: Date, endDate: Date): Promise<MealPlan[]> {
     try {
