@@ -12,7 +12,7 @@
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "cd android && ./gradlew clean && cd ../ios && xcodebuild clean && cd ..",
-    "postinstall": "react-native setup-ios-permissions && pod-install"
+    "postinstall": "npx pod-install ios"
   },
   "reactNativePermissionsIOS": [
     "Camera",
@@ -44,7 +44,8 @@
     "@react-native-community/netinfo": "^9.4.1",
     "react-native-push-notification": "^8.1.1",
     "@react-native-google-signin/google-signin": "^10.0.1",
-    "@invertase/react-native-apple-authentication": "^2.2.2"
+    "@invertase/react-native-apple-authentication": "^2.2.2",
+    "react-native-permissions": "^3.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
