@@ -1,0 +1,6 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="8" y="8" width="44" height="44" rx="12" fill="white"/>
+<path d="M30 18C33.3137 18 36 20.6863 36 24V26H37C37.5523 26 38 26.4477 38 27V41C38 41.5523 37.5523 42 37 42H23C22.4477 42 22 41.5523 22 41V27C22 26.4477 22.4477 26 23 26H24V24C24 20.6863 26.6863 18 30 18ZM37 27H23V41H37V27ZM30 31C30.5523 31 31 31.4477 31 32C31 32.5523 30.5523 33 30 33C29.4477 33 29 32.5523 29 32C29 31.4477 29.4477 31 30 31ZM30 19C27.2386 19 25 21.2386 25 24V26H35V24C35 21.2386 32.7614 19 30 19Z" fill="#4CAF50"/>
+<text x="68" y="25" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="white">Sprytna</text>
+<text x="68" y="45" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="white">Spiżarnia</text>
+</svg>
