@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name -->
+    <string name="app_name">Sprytna Spiżarnia</string>
+    
+    <!-- Notification strings -->
+    <string name="default_notification_channel_id">sprytna_spizarnia_notifications</string>
+    <string name="default_notification_channel_name">Powiadomienia</string>
+    <string name="default_notification_channel_description">Główny kanał powiadomień aplikacji</string>
+    
+    <!-- Expiry notification strings -->
+    <string name="expiry_notification_channel_name">Daty ważności</string>
+    <string name="expiry_notification_channel_description">Powiadomienia o produktach bliskich terminu ważności</string>
+    <string name="expiry_notification_title">Produkt wkrótce się przeterminuje</string>
+    <string name="expiry_notification_multiple_title">Produkty wkrótce się przeterminują</string>
+    
+    <!-- Family notification strings -->
+    <string name="family_notification_channel_name">Rodzina</string>
+    <string name="family_notification_channel_description">Powiadomienia o aktywnościach rodziny</string>
+    <string name="family_product_added">dodał(a) produkt do spiżarni</string>
+    <string name="family_product_consumed">oznaczył(a) produkt jako zużyty</string>
+    <string name="family_shopping_updated">zaktualizował(a) listę zakupów</string>
+    
+    <!-- Achievement notification strings -->
+    <string name="achievement_notification_channel_name">Osiągnięcia</string>
+    <string name="achievement_notification_channel_description">Powiadomienia o zdobytych osiągnięciach</string>
+    <string name="achievement_unlocked">Nowe osiągnięcie!</string>
+    
+    <!-- Recipe notification strings -->
+    <string name="recipe_notification_channel_name">Przepisy</string>
+    <string name="recipe_notification_channel_description">Sugestie przepisów i porady kulinarne</string>
+    <string name="recipe_suggestion">Sugestia przepisu</string>
+    
+    <!-- Weekly report strings -->
+    <string name="weekly_report_channel_name">Raporty</string>
+    <string name="weekly_report_channel_description">Cotygodniowe podsumowania i statystyki</string>
+    <string name="weekly_report_title">Cotygodniowy raport</string>
+    
+    <!-- Permission strings -->
+    <string name="camera_permission_title">Dostęp do aparatu</string>
+    <string name="camera_permission_message">Aplikacja potrzebuje dostępu do aparatu, aby robić zdjęcia produktów i skanować kody kreskowe.</string>
+    <string name="storage_permission_title">Dostęp do pamięci</string>
+    <string name="storage_permission_message">Aplikacja potrzebuje dostępu do pamięci, aby zapisywać zdjęcia produktów.</string>
+    <string name="location_permission_title">Dostęp do lokalizacji</string>
+    <string name="location_permission_message">Aplikacja może używać lokalizacji, aby sugerować pobliskie sklepy.</string>
+    
+    <!-- Button strings -->
+    <string name="ok">OK</string>
+    <string name="cancel">Anuluj</string>
+    <string name="allow">Zezwól</string>
+    <string name="deny">Odmów</string>
+    <string name="settings">Ustawienia</string>
+    <string name="retry">Spróbuj ponownie</string>
+    
+    <!-- Error strings -->
+    <string name="error_network">Błąd połączenia z internetem</string>
+    <string name="error_camera">Nie można uruchomić aparatu</string>
+    <string name="error_storage">Błąd zapisu do pamięci</string>
+    <string name="error_unknown">Wystąpił nieoczekiwany błąd</string>
+    
+    <!-- Biometric strings -->
+    <string name="biometric_title">Uwierzytelnienie biometryczne</string>
+    <string name="biometric_subtitle">Użyj odcisku palca lub Face ID</string>
+    <string name="biometric_description">Potwierdź swoją tożsamość, aby uzyskać dostęp do aplikacji</string>
+    <string name="biometric_negative_button">Użyj PIN</string>
+    
+    <!-- Deep link strings -->
+    <string name="deep_link_product">Otwórz produkt</string>
+    <string name="deep_link_recipe">Otwórz przepis</string>
+    <string name="deep_link_shopping">Otwórz listę zakupów</string>
+    <string name="deep_link_family">Dołącz do rodziny</string>
+</resources>

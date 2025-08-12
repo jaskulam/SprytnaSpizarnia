@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary brand colors -->
+    <color name="primary">#4CAF50</color>
+    <color name="primary_dark">#388E3C</color>
+    <color name="primary_light">#81C784</color>
+    <color name="accent">#FF9800</color>
+    
+    <!-- Secondary colors -->
+    <color name="secondary">#607D8B</color>
+    <color name="secondary_dark">#455A64</color>
+    <color name="secondary_light">#90A4AE</color>
+    
+    <!-- Status colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+    
+    <!-- Background colors -->
+    <color name="background_primary">#FFFFFF</color>
+    <color name="background_secondary">#F5F5F5</color>
+    <color name="background_card">#FFFFFF</color>
+    <color name="background_overlay">#80000000</color>
+    
+    <!-- Text colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_disabled">#BDBDBD</color>
+    <color name="text_inverse">#FFFFFF</color>
+    
+    <!-- Border and divider colors -->
+    <color name="border">#E0E0E0</color>
+    <color name="divider">#EEEEEE</color>
+    
+    <!-- Notification colors -->
+    <color name="notification_color">@color/primary</color>
+    <color name="notification_icon_background">@color/primary</color>
+    
+    <!-- Expiry status colors -->
+    <color name="expiry_fresh">#4CAF50</color>
+    <color name="expiry_warning">#FF9800</color>
+    <color name="expiry_expired">#F44336</color>
+    <color name="expiry_unknown">#9E9E9E</color>
+    
+    <!-- Category colors -->
+    <color name="category_fruits">#81C784</color>
+    <color name="category_vegetables">#4CAF50</color>
+    <color name="category_dairy">#FFE082</color>
+    <color name="category_meat">#FFAB91</color>
+    <color name="category_grains">#BCAAA4</color>
+    <color name="category_beverages">#90CAF9</color>
+    <color name="category_snacks">#CE93D8</color>
+    <color name="category_frozen">#B0BEC5</color>
+    <color name="category_other">#A5D6A7</color>
+    
+    <!-- System colors -->
+    <color name="splash_background">@color/primary</color>
+    <color name="status_bar">#388E3C</color>
+    <color name="navigation_bar">#FFFFFF</color>
+    
+    <!-- Transparent colors -->
+    <color name="transparent">#00000000</color>
+    <color name="semi_transparent">#80000000</color>
+    
+    <!-- Material Design colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="grey_50">#FAFAFA</color>
+    <color name="grey_100">#F5F5F5</color>
+    <color name="grey_200">#EEEEEE</color>
+    <color name="grey_300">#E0E0E0</color>
+    <color name="grey_400">#BDBDBD</color>
+    <color name="grey_500">#9E9E9E</color>
+    <color name="grey_600">#757575</color>
+    <color name="grey_700">#616161</color>
+    <color name="grey_800">#424242</color>
+    <color name="grey_900">#212121</color>
+</resources>
