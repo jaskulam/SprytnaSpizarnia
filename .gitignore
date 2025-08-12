@@ -105,6 +105,8 @@ Thumbs.db
 # Android
 android/app/debug
 android/app/release
+android/.gradle/
+android/build/
 
 # iOS
 ios/build
