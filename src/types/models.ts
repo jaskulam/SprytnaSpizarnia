@@ -5,6 +5,7 @@ export interface Product {
   id: string;
   name: string;
   quantity: string;
+  unit?: ProductUnit;
   expiryDate: Date;
   location: StorageLocation;
   ownerId: string;
@@ -13,6 +14,7 @@ export interface Product {
   barcode?: string;
   category?: ProductCategory;
   photo?: string; // lokalna ścieżka dla mobilnej
+  imageUrl?: string; // zdalny URL, używany w UI
   notes?: string;
   sharedWith?: string[];
   tags?: string[];
