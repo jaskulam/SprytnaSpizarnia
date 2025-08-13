@@ -13,9 +13,9 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootState, AppDispatch } from '../store/store';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { addProduct } from '../store/slices/productsSlice';
-import ProductForm from '../components/product/ProductForm';
-import BarcodeScanner from '../components/product/BarcodeScanner';
-import ReceiptScanner from '../components/product/ReceiptScanner';
+import ProductForm from '../components/products/ProductForm';
+import BarcodeScanner from '../components/products/BarcodeScanner';
+import ReceiptScanner from '../components/products/ReceiptScanner';
 import { Product } from '../types/models';
 import { OpenFoodFactsApiService } from '../services/api/openFoodFactsApi';
 

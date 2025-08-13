@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,24 +9,29 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { RNCamera } from 'react-native-camera';
+import { Camera, useCameraDevices, useFrameProcessor } from 'react-native-vision-camera';
+import { scanBarcodes, BarcodeFormat } from 'vision-camera-code-scanner';
+import { runOnJS } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
 const { width, height } = Dimensions.get('window');
 
 interface BarcodeScannerProps {
-  onBarcodeScanned: (barcode: string) => void;
+  onScan: (barcode: string) => void;
   onClose: () => void;
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
-  onBarcodeScanned,
+  onScan,
   onClose,
 }) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [flashOn, setFlashOn] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const hasScannedRef = useRef(false);
+  const devices = useCameraDevices();
+  const device = devices.back;
 
   useEffect(() => {
     requestCameraPermission();
@@ -34,25 +39,23 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
   const requestCameraPermission = async () => {
     try {
-      const permission = Platform.OS === 'ios' 
-        ? PERMISSIONS.IOS.CAMERA 
-        : PERMISSIONS.ANDROID.CAMERA;
-
-      const result = await request(permission);
-      
-      if (result === RESULTS.GRANTED) {
+      // Prefer VisionCamera's permission flow where possible
+      const vcStatus = await Camera.requestCameraPermission();
+      if (vcStatus === 'authorized') {
         setHasPermission(true);
-      } else {
-        setHasPermission(false);
+        return;
+      }
+      // Fallback to react-native-permissions if needed
+      const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.CAMERA : PERMISSIONS.ANDROID.CAMERA;
+      const result = await request(permission);
+      setHasPermission(result === RESULTS.GRANTED);
+      if (result !== RESULTS.GRANTED) {
         Alert.alert(
           'Brak dostępu do kamery',
           'Aby skanować kody kreskowe, musisz zezwolić na dostęp do kamery.',
           [
             { text: 'Anuluj', onPress: onClose },
-            { text: 'Ustawienia', onPress: () => {
-              // Możesz dodać nawigację do ustawień
-              onClose();
-            }},
+            { text: 'Ustawienia', onPress: onClose },
           ]
         );
       }
@@ -64,12 +67,14 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
   const onBarCodeRead = ({ data }: { data: string }) => {
     if (isProcessing) return;
+    if (hasScannedRef.current) return;
     
     setIsProcessing(true);
+    hasScannedRef.current = true;
     
     // Walidacja kodu kreskowego (podstawowa)
     if (data && data.length > 6) {
-      onBarcodeScanned(data);
+      onScan(data);
     } else {
       Alert.alert(
         'Nieprawidłowy kod',
@@ -79,11 +84,32 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     }
   };
 
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    // Use ZXing/MLKit via plugin
+    const codes = scanBarcodes(frame, [
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.CODE_93,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.QR_CODE,
+    ]);
+    if (codes.length > 0) {
+      const code: any = codes[0];
+      const value = code?.displayValue ?? code?.content?.data ?? code?.rawValue;
+      if (value) {
+        runOnJS(onBarCodeRead)({ data: String(value) });
+      }
+    }
+  }, []);
+
   const toggleFlash = () => {
     setFlashOn(!flashOn);
   };
 
-  if (hasPermission === null) {
+  if (hasPermission === null || !device) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#4CAF50" />
@@ -113,27 +139,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
   return (
     <View style={styles.container}>
-      <RNCamera
+      <Camera
         style={styles.camera}
-        onBarCodeRead={onBarCodeRead}
-        barCodeTypes={[
-          RNCamera.Constants.BarCodeType.ean13,
-          RNCamera.Constants.BarCodeType.ean8,
-          RNCamera.Constants.BarCodeType.code128,
-          RNCamera.Constants.BarCodeType.code39,
-          RNCamera.Constants.BarCodeType.code93,
-          RNCamera.Constants.BarCodeType.codabar,
-          RNCamera.Constants.BarCodeType.upce,
-          RNCamera.Constants.BarCodeType.pdf417,
-          RNCamera.Constants.BarCodeType.aztec,
-          RNCamera.Constants.BarCodeType.datamatrix,
-        ]}
-        flashMode={
-          flashOn
-            ? RNCamera.Constants.FlashMode.torch
-            : RNCamera.Constants.FlashMode.off
-        }
-        captureAudio={false}
+        device={device}
+        isActive={true}
+        torch={flashOn ? 'on' : 'off'}
+        frameProcessor={frameProcessor}
+        frameProcessorFps={5}
       >
         {/* Overlay z ramką skanowania */}
         <View style={styles.overlay}>
@@ -186,7 +198,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             )}
           </View>
         </View>
-      </RNCamera>
+      </Camera>
     </View>
   );
 };

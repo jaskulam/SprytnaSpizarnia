@@ -1,6 +1,9 @@
-apply plugin: "com.android.application"
-apply plugin: "org.jetbrains.kotlin.android"
-apply plugin: "com.facebook.react"
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+    id "com.facebook.react"
+    id "com.google.gms.google-services" apply false
+}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -70,6 +73,7 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
+    buildToolsVersion rootProject.ext.buildToolsVersion
     ndkVersion rootProject.ext.ndkVersion
 
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -116,12 +120,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 
     packagingOptions {
@@ -130,10 +134,22 @@ android {
     }
 }
 
+// Force Kotlin stdlib to 1.8.22 for AGP 7.4.x compatibility
+configurations.all { config ->
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.startsWith('kotlin-stdlib')) {
+            details.useVersion '1.8.22'
+            details.because 'Align Kotlin stdlib to 1.8.22 to avoid D8/R8 dexing issues on AGP 7.4.x'
+        }
+        if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name == 'kotlin-stdlib-common') {
+            details.useVersion '1.8.22'
+        }
+    }
+}
+
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation("com.facebook.react:flipper-integration")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
@@ -150,32 +166,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-functions'
     implementation 'com.google.firebase:firebase-messaging'
 
-    // React Native Firebase
-    implementation project(':@react-native-firebase_app')
-    implementation project(':@react-native-firebase_auth')
-    implementation project(':@react-native-firebase_firestore')
-    implementation project(':@react-native-firebase_storage')
-    implementation project(':@react-native-firebase_functions')
-    implementation project(':@react-native-firebase_messaging')
+    // Native RN modules are autolinked by the React Native Gradle Plugin
 
-    // Camera and Image Picker
-    implementation project(':react-native-image-picker')
-    implementation project(':react-native-camera')
-
-    // Push Notifications
-    implementation project(':react-native-push-notification')
-
-    // Async Storage
-    implementation project(':@react-native-async-storage_async-storage')
-
-    // Vector Icons
-    implementation project(':react-native-vector-icons')
-
-    // Permissions
-    implementation project(':react-native-permissions')
-
-    // QR Code Scanner
-    implementation project(':react-native-qrcode-scanner')
+    // QR Code Scanner (migrated to VisionCamera + code scanner plugin)
 
     // Additional dependencies
     implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -190,7 +183,19 @@ dependencies {
     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
 }
 
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+// Conditionally apply Google Services plugin only if google-services.json is present
+def googleServicesJson = file('google-services.json')
+def googleServicesJsonDebug = file('src/debug/google-services.json')
+def googleServicesJsonRelease = file('src/release/google-services.json')
+if (googleServicesJson.exists() || googleServicesJsonDebug.exists() || googleServicesJsonRelease.exists()) {
+    apply plugin: 'com.google.gms.google-services'
+} else {
+    logger.lifecycle("[app] google-services.json not found; skipping Google Services plugin for this build.")
+}
 
-// Firebase Google Services
-apply plugin: 'com.google.gms.google-services'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}

@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Notification, NotificationPreferences, NotificationChannel, NotificationCategory } from '../../types/models';
-import { NotificationService } from '../../services/notification';
+import { NotificationService, ReactNativeNotificationHelper } from '../../notifications';
 import { FirestoreService } from '../../services/firebase/firestore';
-import PushNotification from 'react-native-push-notification';
 import { RootState } from '../store';
 
 interface NotificationsState {
@@ -32,11 +31,9 @@ export const initializeNotifications = createAsyncThunk(
   'notifications/initialize',
   async ({ userId }: { userId: string }) => {
     try {
-      // Request permission for push notifications
-      const permission = await NotificationService.requestPermission();
-      
-      // Get device token
-      const deviceToken = await NotificationService.getDeviceToken();
+      // Initialize and request permissions (RN helper)
+      await ReactNativeNotificationHelper.initialize();
+      const hasPermission = await ReactNativeNotificationHelper.requestPermissions();
       
       // Load user preferences
       const preferences = await FirestoreService.getUserNotificationPreferences(userId);
@@ -51,8 +48,8 @@ export const initializeNotifications = createAsyncThunk(
         notifications,
         preferences,
         unreadCount,
-        deviceToken,
-        pushEnabled: permission === 'granted',
+        deviceToken: null,
+        pushEnabled: hasPermission,
       };
     } catch (error) {
       throw new Error('Failed to initialize notifications');
@@ -77,15 +74,6 @@ export const sendNotification = createAsyncThunk(
     
     // Save to Firestore
     await FirestoreService.createNotification(notificationData);
-    
-    // Send via push notification if enabled
-    if (channel === 'push' || channel === 'both') {
-      await NotificationService.sendPushNotification({
-        title: notification.title,
-        body: notification.message,
-        data: notification.data || {},
-      });
-    }
     
     return notificationData;
   }
@@ -112,14 +100,15 @@ export const scheduleNotification = createAsyncThunk(
     
     // Save to Firestore
     await FirestoreService.createNotification(notificationData);
-    
-    // Schedule with react-native-push-notification
-    PushNotification.localNotificationSchedule({
+    // Schedule/show locally via RN helper
+    await ReactNativeNotificationHelper.showLocalNotification({
+      id: notificationData.id,
       title: notification.title,
-      message: notification.message,
-      date: scheduledFor,
-      repeatType: repeat,
-      userInfo: notification.data || {},
+      body: notification.message,
+      channelId: 'system_updates',
+      data: notification.data || {},
+      scheduledTime: scheduledFor,
+      repeatType: repeat as any,
     });
     
     return notificationData;
@@ -191,7 +180,7 @@ export const testNotification = createAsyncThunk(
       title: 'Test Notification',
       message: 'This is a test notification to verify your settings work correctly.',
       category: 'system',
-      type: 'info',
+      type: 'system_update',
       read: false,
       data: { test: true },
     };
@@ -202,10 +191,12 @@ export const testNotification = createAsyncThunk(
       createdAt: new Date(),
     };
     
-    // Send push notification
-    await NotificationService.sendPushNotification({
+    // Show local test notification via RN helper
+    await ReactNativeNotificationHelper.showLocalNotification({
+      id: notification.id,
       title: notification.title,
       body: notification.message,
+      channelId: 'system_updates',
       data: notification.data || {},
     });
     

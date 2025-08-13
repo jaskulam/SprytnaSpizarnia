@@ -1,0 +1,66 @@
+[
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/drawable_button_primary.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/drawable/button_primary.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/drawable_button_secondary.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/drawable/button_secondary.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-xxxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/drawable_ic_notification.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/drawable/ic_notification.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/drawable_splash_background.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/drawable/splash_background.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/drawable_dialog_background.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/drawable/dialog_background.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/xml_file_paths.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-xxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-mdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/mipmap-xhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.sprytna.spizarnia.app-merged_res-45:/xml_network_security_config.xml.flat",
+        "source": "com.sprytna.spizarnia.app-main-47:/xml/network_security_config.xml"
+    }
+]
