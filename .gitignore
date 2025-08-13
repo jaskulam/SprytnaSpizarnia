@@ -107,6 +107,8 @@ android/app/debug
 android/app/release
 android/.gradle/
 android/build/
+android/app/build/
+*.apk
 
 # iOS
 ios/build
