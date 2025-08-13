@@ -114,6 +114,10 @@ android/app/build/
 android/app/google-services.json
 ios/GoogleService-Info.plist
 
+# Generated build files containing API keys
+android/app/build/
+android/build/
+
 # iOS
 ios/build
 ios/Pods
