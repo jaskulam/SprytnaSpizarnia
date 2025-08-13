@@ -110,6 +110,10 @@ android/build/
 android/app/build/
 *.apk
 
+# Firebase configuration (contains sensitive keys)
+android/app/google-services.json
+ios/GoogleService-Info.plist
+
 # iOS
 ios/build
 ios/Pods
