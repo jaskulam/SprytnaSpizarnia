@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
-import SplashScreen from 'react-native-splash-screen';
+// import SplashScreen from 'react-native-splash-screen'; // Tymczasowo wyłączony
 
 import { RootState, AppDispatch } from '../store/store';
 import { checkAuthStatus, signInAnonymously } from '../store/slices/authSlice';
@@ -40,7 +40,7 @@ const AppNavigator: React.FC = () => {
         await dispatch(signInAnonymously());
       }
       
-      SplashScreen.hide();
+      // SplashScreen.hide(); // Tymczasowo wyłączony
     };
 
     initializeAuth();

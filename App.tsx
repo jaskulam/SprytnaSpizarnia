@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import SplashScreen from 'react-native-splash-screen';
+// import SplashScreen from 'react-native-splash-screen'; // Tymczasowo wyłączony
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -18,7 +18,7 @@ const App: React.FC = () => {
       try {
         // Konfiguracja Google Sign In
         GoogleSignin.configure({
-          webClientId: 'YOUR_WEB_CLIENT_ID_FROM_FIREBASE',
+          webClientId: '569311507320-mr2rs1qd3u4hqcdib4cj13fdosnb78hc.apps.googleusercontent.com',
         });
 
         // Inicjalizacja Firebase
@@ -30,12 +30,12 @@ const App: React.FC = () => {
         });
 
         // Ukryj splash screen
-        SplashScreen.hide();
+        // SplashScreen.hide(); // Tymczasowo wyłączony
 
         return () => unsubscribe();
       } catch (error) {
         console.error('App initialization error:', error);
-        SplashScreen.hide();
+        // SplashScreen.hide(); // Tymczasowo wyłączony
       }
     };
 

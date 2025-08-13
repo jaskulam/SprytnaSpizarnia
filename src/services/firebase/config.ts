@@ -7,14 +7,18 @@ import { Platform } from 'react-native';
 
 export const initializeFirebase = async (): Promise<void> => {
   try {
+    console.log('🔥 Initializing Firebase...');
+    
     // Konfiguracja Firestore
     await firestore().settings({
       persistence: true,
       cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED,
     });
+    console.log('✅ Firestore configured');
 
     // Włączenie Crashlytics
     await crashlytics().setCrashlyticsCollectionEnabled(true);
+    console.log('✅ Crashlytics enabled');
 
     // Konfiguracja powiadomień
     if (Platform.OS === 'ios') {
@@ -28,16 +32,18 @@ export const initializeFirebase = async (): Promise<void> => {
 
     if (enabled) {
       const token = await messaging().getToken();
-      console.log('FCM Token:', token);
+      console.log('✅ FCM Token:', token);
     }
 
     // Nasłuchiwanie na powiadomienia w tle
     messaging().setBackgroundMessageHandler(async remoteMessage => {
-      console.log('Background message:', remoteMessage);
+      console.log('📱 Background message:', remoteMessage);
     });
 
+    console.log('🚀 Firebase initialization completed successfully!');
+
   } catch (error) {
-    console.error('Firebase initialization error:', error);
+    console.error('❌ Firebase initialization error:', error);
     crashlytics().recordError(error as Error);
   }
 };
