@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "569311507320",
+    "project_id": "sprytna-spizarnia-2524d",
+    "storage_bucket": "sprytna-spizarnia-2524d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:569311507320:android:fa63d1ed71f9b771500e8d",
+        "android_client_info": {
+          "package_name": "com.sprytna.spizarnia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzGLXl7P4_W6z3pOLGsLjrjeJ3TFnwx_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,14 +1,13 @@
 package com.sprytna.spizarnia;
 
 import android.app.Application;
-import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.ReactHost;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -22,11 +21,8 @@ public class MainApplication extends Application implements ReactApplication {
 
         @Override
         protected List<ReactPackage> getPackages() {
-          @SuppressWarnings("UnnecessaryLocalVariable")
-          List<ReactPackage> packages = new PackageList(this).getPackages();
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // packages.add(new MyReactNativePackage());
-          return packages;
+          // RN Gradle Plugin autolinks native modules.
+          return new ArrayList<>();
         }
 
         @Override
@@ -51,11 +47,6 @@ public class MainApplication extends Application implements ReactApplication {
   }
 
   @Override
-  public ReactHost getReactHost() {
-    return DefaultNewArchitectureEntryPoint.getReactHost(this, getReactNativeHost());
-  }
-
-  @Override
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
@@ -63,6 +54,18 @@ public class MainApplication extends Application implements ReactApplication {
       // If you opted-in for the New Architecture, we load the native entry point for this app.
       DefaultNewArchitectureEntryPoint.load();
     }
-    ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+    // Initialize Flipper in debug builds using reflection to avoid compile-time dependency
+    if (BuildConfig.DEBUG) {
+      try {
+        Class<?> flipperClass = Class.forName("com.sprytna.spizarnia.ReactNativeFlipper");
+        Class<?> contextClass = Class.forName("android.content.Context");
+        Class<?> rnManagerClass = Class.forName("com.facebook.react.ReactInstanceManager");
+        flipperClass
+            .getMethod("initializeFlipper", contextClass, rnManagerClass)
+            .invoke(null, this, getReactNativeHost().getReactInstanceManager());
+      } catch (Exception e) {
+        // Flipper not available in this build; ignore
+      }
+    }
   }
 }

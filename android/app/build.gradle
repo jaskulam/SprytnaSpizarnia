@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "com.facebook.react"
-    id "com.google.gms.google-services" apply false
+    id "com.google.gms.google-services"
 }
 
 /**
@@ -107,7 +107,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            applicationIdSuffix ".debug"
+            // applicationIdSuffix ".debug"  // Temporarily disabled for Firebase
             versionNameSuffix "-debug"
         }
         release {
@@ -157,14 +157,18 @@ dependencies {
         implementation jscFlavor
     }
 
-    // Firebase
-    implementation platform('com.google.firebase:firebase-bom:32.7.0')
-    implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.google.firebase:firebase-firestore'
-    implementation 'com.google.firebase:firebase-storage'
-    implementation 'com.google.firebase:firebase-functions'
-    implementation 'com.google.firebase:firebase-messaging'
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
+
+    // Add Firebase Analytics dependency
+    implementation("com.google.firebase:firebase-analytics")
+
+    // Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging")
+
+    // Add other Firebase dependencies as needed
+    // implementation("com.google.firebase:firebase-auth")
+    // implementation("com.google.firebase:firebase-firestore")
 
     // Native RN modules are autolinked by the React Native Gradle Plugin
 
@@ -183,15 +187,7 @@ dependencies {
     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
 }
 
-// Conditionally apply Google Services plugin only if google-services.json is present
-def googleServicesJson = file('google-services.json')
-def googleServicesJsonDebug = file('src/debug/google-services.json')
-def googleServicesJsonRelease = file('src/release/google-services.json')
-if (googleServicesJson.exists() || googleServicesJsonDebug.exists() || googleServicesJsonRelease.exists()) {
-    apply plugin: 'com.google.gms.google-services'
-} else {
-    logger.lifecycle("[app] google-services.json not found; skipping Google Services plugin for this build.")
-}
+// Google Services plugin is applied via the plugins block above per Firebase docs
 
 java {
     toolchain {

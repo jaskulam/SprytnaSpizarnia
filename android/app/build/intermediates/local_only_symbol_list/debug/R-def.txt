@@ -97,9 +97,15 @@ string family_notification_channel_name
 string family_product_added
 string family_product_consumed
 string family_shopping_updated
+string gcm_defaultSenderId
+string google_api_key
+string google_app_id
+string google_crash_reporting_api_key
+string google_storage_bucket
 string location_permission_message
 string location_permission_title
 string ok
+string project_id
 string recipe_notification_channel_description
 string recipe_notification_channel_name
 string recipe_suggestion

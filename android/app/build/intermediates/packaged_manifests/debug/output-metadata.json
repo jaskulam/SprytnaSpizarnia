@@ -4,7 +4,7 @@
     "type": "PACKAGED_MANIFESTS",
     "kind": "Directory"
   },
-  "applicationId": "com.sprytna.spizarnia.debug",
+  "applicationId": "com.sprytna.spizarnia",
   "variantName": "debug",
   "elements": [
     {

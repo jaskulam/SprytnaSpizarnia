@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">569311507320</string>
+    <string name="google_api_key" translatable="false">AIzaSyDzGLXl7P4_W6z3pOLGsLjrjeJ3TFnwx_o</string>
+    <string name="google_app_id" translatable="false">1:569311507320:android:fa63d1ed71f9b771500e8d</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDzGLXl7P4_W6z3pOLGsLjrjeJ3TFnwx_o</string>
+    <string name="google_storage_bucket" translatable="false">sprytna-spizarnia-2524d.firebasestorage.app</string>
+    <string name="project_id" translatable="false">sprytna-spizarnia-2524d</string>
+</resources>
