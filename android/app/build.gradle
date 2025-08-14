@@ -1,101 +1,46 @@
 plugins {
-    id "com.android.application"
-    id "org.jetbrains.kotlin.android"
-    id "com.facebook.react"
-    id "com.google.gms.google-services"
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.facebook.react'
+    id 'com.google.gms.google-services'
 }
 
-/**
- * This is the configuration block to customize your React Native Android app.
- * By default you don't need to apply any configuration, just uncomment the lines you need.
- */
-react {
-    /* Folders */
-    //   The root of your project, i.e. where "package.json" lives. Default is '..'
-    // root = file("../")
-    //   The folder where the react-native packages are. Default is '../node_modules'
-    // reactNativeDir = file("../node_modules/react-native")
-    //   The folder where the react-native Codegen package is. Default is '../node_modules/@react-native/codegen'
-    // codegenDir = file("../node_modules/@react-native/codegen")
-    //   The cli.js file which is the React Native CLI entrypoint. Default is '../node_modules/react-native/cli.js'
-    // cliFile = file("../node_modules/react-native/cli.js")
+// Zmienne pomocnicze – można przenieść do gradle.properties
+def hermesEnabled = project.hasProperty('hermesEnabled') ? project.property('hermesEnabled') : 'true'
+def FLIPPER_VERSION = project.hasProperty('FLIPPER_VERSION') ? project.property('FLIPPER_VERSION') : '0.230.0'
 
-    /* Variants */
-    //   The list of variants to that are debuggable. For those we're going to
-    //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
-    //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
-    // debuggableVariants = ["liteDebug", "prodDebug"]
+// Włączenie Proguard/R8 w release
+def enableProguardInReleaseBuilds = true
 
-    /* Bundling */
-    //   A list containing the node command and its flags. Default is just 'node'.
-    // nodeExecutableAndArgs = ["node"]
-    //
-    //   The command to run when bundling. By default is 'bundle'
-    // bundleCommand = "ram-bundle"
-    //
-    //   The path to the CLI configuration file. Default is empty.
-    // bundleConfig = file(../rn-cli.config.js)
-    //
-    //   The name of the generated asset file containing your JS bundle
-    // bundleAssetName = "MyApplication.android.bundle"
-    //
-    //   The entry file for bundle generation. Default is 'index.android.js' or 'index.js'
-    // entryFile = file("../js/MyApplication.android.js")
-    //
-    //   A list of extra flags to pass to the 'bundle' commands.
-    //   See https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
-    // extraBundlerArgs = []
-
-    /* Hermes Commands */
-    //   The hermes command to run. By default it is 'hermesc'
-    // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
-    //
-    //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
-    // hermesFlags = ["-O", "-output-source-map"]
-}
-
-/**
- * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
- */
-def enableProguardInReleaseBuilds = false
-
-/**
- * The preferred build flavor of JavaScriptCore (JSC)
- *
- * For example, to use the international variant, you can use:
- * `def jscFlavor = 'org.webkit:android-jsc-intl:+'`
- *
- * The international variant includes ICU i18n library and necessary data
- * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
- * give correct results when using with locales other than en-US. Note that
- * this variant is about 6MiB larger per architecture than default.
- */
+// Domyślny silnik JS (wykorzystywany tylko, gdy Hermes jest wyłączony)
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
+    // Wartości wersji przeniesione do rootProject.ext lub gradle.properties
+    compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     ndkVersion rootProject.ext.ndkVersion
 
-    compileSdkVersion rootProject.ext.compileSdkVersion
-
-    namespace "com.sprytna.spizarnia"
+    namespace 'com.sprytna.spizarnia'
     defaultConfig {
-        applicationId "com.sprytna.spizarnia"
+        applicationId 'com.sprytna.spizarnia'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
         multiDexEnabled true
     }
 
     signingConfigs {
         debug {
+            // Klucz debugowy – nie przechowuj w repozytorium produkcyjnym
             storeFile file('debug.keystore')
             storePassword 'android'
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
         release {
+            // Dane do podpisu produkcyjnego pobierane z właściwości projektu lub zmiennych środowiskowych
             if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
                 storeFile file(MYAPP_UPLOAD_STORE_FILE)
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
@@ -104,18 +49,18 @@ android {
             }
         }
     }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            // applicationIdSuffix ".debug"  // Temporarily disabled for Firebase
-            versionNameSuffix "-debug"
+            versionNameSuffix '-debug'
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // Włączenie shrinkResources dla mniejszego rozmiaru APK
+            shrinkResources enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -123,61 +68,56 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = '17'
     }
 
+    // Przy włączonym Hermesie biblioteki JSC można pominąć
     packagingOptions {
-        pickFirst "**/libc++_shared.so"
-        pickFirst "**/libjsc.so"
+        if (hermesEnabled.toBoolean()) {
+            exclude '**/libjsc.so'
+        } else {
+            pickFirst '**/libjsc.so'
+        }
+        pickFirst '**/libc++_shared.so'
     }
 }
 
-
-
 dependencies {
-    // The version of react-native is set by the React Native Gradle Plugin
-    implementation("com.facebook.react:react-android")
-
+    // Biblioteka React Native – wersja sterowana przez plugin
+    implementation 'com.facebook.react:react-android'
+    // Silnik JS: Hermes lub JSC
     if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
+        implementation 'com.facebook.react:hermes-android'
     } else {
         implementation jscFlavor
     }
 
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
+    // Firebase BoM – sprawdź w dokumentacji aktualną wersję
+    implementation platform('com.google.firebase:firebase-bom:34.1.0')
+    // Podstawowe moduły Firebase
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-auth'     // logowanie
+    implementation 'com.google.firebase:firebase-firestore' // baza danych
 
-    // Add Firebase Analytics dependency
-    implementation("com.google.firebase:firebase-analytics")
-
-    // Firebase Cloud Messaging
-    implementation("com.google.firebase:firebase-messaging")
-
-    // Add other Firebase dependencies as needed
-    // implementation("com.google.firebase:firebase-auth")
-    // implementation("com.google.firebase:firebase-firestore")
-
-    // Native RN modules are autolinked by the React Native Gradle Plugin
-
-    // QR Code Scanner (migrated to VisionCamera + code scanner plugin)
-
-    // Additional dependencies
+    // Biblioteki AndroidX i Material
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.multidex:multidex:2.0.1'
 
-    debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
+    // Narzdzia developerskie Flipper - włączone dla debug
+    // Uwaga: flipper-fresco-plugin powodował błąd rozwiązywania zależności na tej maszynie,
+    // dlatego zostawiamy go wyłączone (można odkomentować jeśli repozytoria będą poprawne).
+    debugImplementation "com.facebook.flipper:flipper:${FLIPPER_VERSION}"
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
-        exclude group:'com.squareup.okhttp3', module:'okhttp'
+        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
     }
-    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
+    // debugImplementation "com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}" // intentionally omitted
 }
 
-// Google Services plugin is applied via the plugins block above per Firebase docs
-
+// Ustawienia kompilatora Javy – wykorzystanie JDK 17
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
