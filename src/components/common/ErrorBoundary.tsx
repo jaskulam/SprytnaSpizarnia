@@ -12,6 +12,8 @@ import crashlytics from '@react-native-firebase/crashlytics';
 
 interface Props {
   children: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  fallback?: (error: Error, retry: () => void) => ReactNode;
 }
 
 interface State {
@@ -32,6 +34,14 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     crashlytics().recordError(error);
+    // Forward to external handler if provided
+    if (this.props.onError) {
+      try {
+        this.props.onError(error, errorInfo);
+      } catch (e) {
+        // no-op
+      }
+    }
   }
 
   handleReset = () => {
@@ -40,6 +50,9 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback && this.state.error) {
+        return this.props.fallback(this.state.error, this.handleReset);
+      }
       return (
         <ScrollView style={styles.container}>
           <View style={styles.content}>

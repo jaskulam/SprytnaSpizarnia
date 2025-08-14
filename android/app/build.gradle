@@ -134,18 +134,7 @@ android {
     }
 }
 
-// Force Kotlin stdlib to 1.8.22 for AGP 7.4.x compatibility
-configurations.all { config ->
-    resolutionStrategy.eachDependency { details ->
-        if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.startsWith('kotlin-stdlib')) {
-            details.useVersion '1.8.22'
-            details.because 'Align Kotlin stdlib to 1.8.22 to avoid D8/R8 dexing issues on AGP 7.4.x'
-        }
-        if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name == 'kotlin-stdlib-common') {
-            details.useVersion '1.8.22'
-        }
-    }
-}
+
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin

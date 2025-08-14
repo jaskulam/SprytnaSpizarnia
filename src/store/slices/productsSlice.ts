@@ -1,157 +1,92 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { Product } from '../../types/models';
-import { FirestoreService } from '../../services/firebase/firestore';
+import productsService from '@/services/productsService';
+import { Product } from '@/types/models';
 import { RootState } from '../store';
 
 interface ProductsState {
   items: Product[];
   isLoading: boolean;
   error: string | null;
-  lastSync: Date | null;
-  pendingChanges: number;
   isOnline: boolean;
+  pendingChanges: number;
+  lastSync: Date | null;
+  filters: {
+    location: string | null;
+    sortBy: 'expiryDate' | 'name' | 'createdAt';
+    showExpired: boolean;
+  };
 }
 
 const initialState: ProductsState = {
   items: [],
   isLoading: false,
   error: null,
-  lastSync: null,
-  pendingChanges: 0,
   isOnline: true,
+  pendingChanges: 0,
+  lastSync: null,
+  filters: {
+    location: null,
+    sortBy: 'expiryDate',
+    showExpired: false,
+  },
 };
 
-// Thunks
+// Async thunks
 export const fetchProducts = createAsyncThunk(
-  'products/fetch',
+  'products/fetchProducts',
   async (_, { getState }) => {
     const state = getState() as RootState;
     const userId = state.auth.user?.id;
-    const familyId = state.auth.user?.familyId;
-
     if (!userId) throw new Error('User not authenticated');
-
-    const netState = await NetInfo.fetch();
-    const isOnline = netState.isConnected ?? false;
-
-    if (isOnline) {
-      const products = await FirestoreService.getProducts(userId, familyId);
-      await AsyncStorage.setItem('products_cache', JSON.stringify(products));
-      return products;
-    } else {
-      const cached = await AsyncStorage.getItem('products_cache');
-      return cached ? JSON.parse(cached) : [];
-    }
+    
+    return await productsService.getProducts(userId);
   }
 );
 
 export const addProduct = createAsyncThunk(
-  'products/add',
-  async (product: Omit<Product, 'id'>, { getState }) => {
+  'products/addProduct',
+  async (product: Omit<Product, 'id' | 'createdAt'>, { getState }) => {
     const state = getState() as RootState;
-    const isOnline = state.products.isOnline;
-
-    if (isOnline) {
-      return await FirestoreService.addProduct(product);
-    } else {
-      // Add to local storage for later sync
-      const pendingProducts = await AsyncStorage.getItem('pending_products') || '[]';
-      const pending = JSON.parse(pendingProducts);
-      const localProduct = {
-        ...product,
-        id: `local_${Date.now()}`,
-        _pending: true,
-      };
-      pending.push(localProduct);
-      await AsyncStorage.setItem('pending_products', JSON.stringify(pending));
-      return localProduct as Product;
-    }
+    const userId = state.auth.user?.id;
+    if (!userId) throw new Error('User not authenticated');
+    
+    return await productsService.addProduct({
+      ...product,
+      ownerId: userId,
+    });
   }
 );
 
 export const updateProduct = createAsyncThunk(
-  'products/update',
-  async ({ id, updates }: { id: string; updates: Partial<Product> }, { getState }) => {
-    const state = getState() as RootState;
-    const isOnline = state.products.isOnline;
-
-    if (isOnline) {
-      await FirestoreService.updateProduct(id, updates);
-      return { id, updates };
-    } else {
-      // Queue for sync
-      const pendingUpdates = await AsyncStorage.getItem('pending_updates') || '[]';
-      const pending = JSON.parse(pendingUpdates);
-      pending.push({ id, updates, timestamp: Date.now() });
-      await AsyncStorage.setItem('pending_updates', JSON.stringify(pending));
-      return { id, updates };
-    }
+  'products/updateProduct',
+  async ({ id, updates }: { id: string; updates: Partial<Product> }) => {
+    await productsService.updateProduct(id, updates);
+    return { id, updates };
   }
 );
 
 export const deleteProduct = createAsyncThunk(
-  'products/delete',
-  async (productId: string, { getState }) => {
-    const state = getState() as RootState;
-    const isOnline = state.products.isOnline;
-
-    if (isOnline) {
-      await FirestoreService.deleteProduct(productId);
-      return productId;
-    } else {
-      // Queue for sync
-      const pendingDeletes = await AsyncStorage.getItem('pending_deletes') || '[]';
-      const pending = JSON.parse(pendingDeletes);
-      pending.push({ id: productId, timestamp: Date.now() });
-      await AsyncStorage.setItem('pending_deletes', JSON.stringify(pending));
-      return productId;
-    }
+  'products/deleteProduct',
+  async (productId: string) => {
+    await productsService.deleteProduct(productId);
+    return productId;
   }
 );
 
-export const syncOfflineChanges = createAsyncThunk(
-  'products/sync',
+export const syncPendingChanges = createAsyncThunk(
+  'products/syncPendingChanges',
   async () => {
-    const pendingProducts = JSON.parse(await AsyncStorage.getItem('pending_products') || '[]');
-    const pendingUpdates = JSON.parse(await AsyncStorage.getItem('pending_updates') || '[]');
-    const pendingDeletes = JSON.parse(await AsyncStorage.getItem('pending_deletes') || '[]');
+    await productsService.syncOfflineQueue();
+    return new Date();
+  }
+);
 
-    const results = {
-      added: [] as Product[],
-      updated: [] as string[],
-      deleted: [] as string[],
-    };
-
-    // Process additions
-    for (const product of pendingProducts) {
-      const { _pending, ...productData } = product;
-      const added = await FirestoreService.addProduct(productData);
-      results.added.push(added);
-    }
-
-    // Process updates
-    for (const { id, updates } of pendingUpdates) {
-      await FirestoreService.updateProduct(id, updates);
-      results.updated.push(id);
-    }
-
-    // Process deletions
-    for (const { id } of pendingDeletes) {
-      await FirestoreService.deleteProduct(id);
-      results.deleted.push(id);
-    }
-
-    // Clear pending changes
-    await AsyncStorage.multiRemove([
-      'pending_products',
-      'pending_updates',
-      'pending_deletes',
-    ]);
-
-    return results;
+export const saveLocalState = createAsyncThunk(
+  'products/saveLocalState',
+  async (_, { getState }) => {
+    const state = getState() as RootState;
+    // Placeholder for local snapshot; can persist if needed
+    void state;
   }
 );
 
@@ -159,17 +94,23 @@ const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    setProducts: (state, action: PayloadAction<Product[]>) => {
-      state.items = action.payload;
-    },
     setOnlineStatus: (state, action: PayloadAction<boolean>) => {
       state.isOnline = action.payload;
+    },
+    setFilter: (state, action: PayloadAction<Partial<ProductsState['filters']>>) => {
+      state.filters = { ...state.filters, ...action.payload };
     },
     clearError: (state) => {
       state.error = null;
     },
-    updatePendingChanges: (state, action: PayloadAction<number>) => {
-      state.pendingChanges = action.payload;
+    incrementPendingChanges: (state) => {
+      state.pendingChanges += 1;
+    },
+    decrementPendingChanges: (state) => {
+      state.pendingChanges = Math.max(0, state.pendingChanges - 1);
+    },
+    resetPendingChanges: (state) => {
+      state.pendingChanges = 0;
     },
   },
   extraReducers: (builder) => {
@@ -182,7 +123,6 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.isLoading = false;
         state.items = action.payload;
-        state.lastSync = new Date();
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;
@@ -193,72 +133,113 @@ const productsSlice = createSlice({
     builder
       .addCase(addProduct.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(addProduct.fulfilled, (state, action) => {
         state.isLoading = false;
         state.items.push(action.payload);
-        if (!state.isOnline) {
-          state.pendingChanges++;
-        }
+        state.items.sort((a, b) => a.expiryDate.getTime() - b.expiryDate.getTime());
       })
       .addCase(addProduct.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Błąd dodawania produktu';
+        if (!state.isOnline) {
+          state.pendingChanges += 1;
+        }
       });
 
     // Update product
     builder
+      .addCase(updateProduct.pending, (state) => {
+        state.error = null;
+      })
       .addCase(updateProduct.fulfilled, (state, action) => {
-        const { id, updates } = action.payload;
-        const index = state.items.findIndex(p => p.id === id);
+        const index = state.items.findIndex(p => p.id === action.payload.id);
         if (index !== -1) {
-          state.items[index] = { ...state.items[index], ...updates };
+          state.items[index] = { ...state.items[index], ...action.payload.updates };
         }
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.error = action.error.message || 'Błąd aktualizacji produktu';
         if (!state.isOnline) {
-          state.pendingChanges++;
+          state.pendingChanges += 1;
         }
       });
 
     // Delete product
     builder
+      .addCase(deleteProduct.pending, (state) => {
+        state.error = null;
+      })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.items = state.items.filter(p => p.id !== action.payload);
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.error = action.error.message || 'Błąd usuwania produktu';
         if (!state.isOnline) {
-          state.pendingChanges++;
+          state.pendingChanges += 1;
         }
       });
 
-    // Sync offline changes
+    // Sync pending changes
     builder
-      .addCase(syncOfflineChanges.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(syncOfflineChanges.fulfilled, (state) => {
-        state.isLoading = false;
+      .addCase(syncPendingChanges.fulfilled, (state, action) => {
         state.pendingChanges = 0;
-        state.lastSync = new Date();
-      })
-      .addCase(syncOfflineChanges.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || 'Błąd synchronizacji';
+        state.lastSync = action.payload;
       });
   },
 });
 
-export const { setProducts, setOnlineStatus, clearError, updatePendingChanges } = productsSlice.actions;
-
 // Selectors
-export const selectProducts = (state: RootState) => state.products.items;
-export const selectProductById = (id: string) => (state: RootState) =>
-  state.products.items.find(p => p.id === id);
-export const selectExpiringProducts = (state: RootState) => {
-  const threeDaysFromNow = new Date();
-  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+export const selectFilteredProducts = (state: RootState) => {
+  let products = [...state.products.items];
   
-  return state.products.items.filter(product => {
-    if (!product.expiryDate) return false;
-    return product.expiryDate <= threeDaysFromNow && product.expiryDate >= new Date();
-  });
+  // Apply filters
+  if (!state.products.filters.showExpired) {
+    products = products.filter(p => p.expiryDate > new Date());
+  }
+  
+  if (state.products.filters.location) {
+    products = products.filter(p => p.location === state.products.filters.location);
+  }
+  
+  // Sort
+  switch (state.products.filters.sortBy) {
+    case 'name':
+      products.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case 'createdAt':
+      products.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      break;
+    case 'expiryDate':
+    default:
+      products.sort((a, b) => a.expiryDate.getTime() - b.expiryDate.getTime());
+      break;
+  }
+  
+  return products;
 };
+
+export const selectExpiringProducts = (state: RootState, daysAhead: number = 3) => {
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + daysAhead);
+  
+  return state.products.items.filter(p => 
+    p.expiryDate <= futureDate && p.expiryDate >= new Date()
+  );
+};
+
+export const selectExpiredProducts = (state: RootState) => {
+  return state.products.items.filter(p => p.expiryDate < new Date());
+};
+
+export const { 
+  setOnlineStatus, 
+  setFilter, 
+  clearError,
+  incrementPendingChanges,
+  decrementPendingChanges,
+  resetPendingChanges,
+} = productsSlice.actions;
 
 export default productsSlice.reducer;

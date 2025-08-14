@@ -14,6 +14,9 @@
 @rem limitations under the License.
 @rem
 
+@rem Explicitly set JAVA_HOME to JDK 17
+set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.16.8-hotspot
+
 @if "%DEBUG%"=="" @echo off
 @rem ##########################################################################
 @rem

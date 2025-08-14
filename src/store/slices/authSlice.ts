@@ -55,6 +55,15 @@ export const signInWithEmail = createAsyncThunk(
   }
 );
 
+export const registerWithEmail = createAsyncThunk(
+  'auth/registerWithEmail',
+  async ({ email, password }: { email: string; password: string }) => {
+    const user = await AuthService.registerWithEmailAndPassword(email, password);
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+    return user;
+  }
+);
+
 export const signOut = createAsyncThunk(
   'auth/signOut',
   async () => {
@@ -160,6 +169,23 @@ const authSlice = createSlice({
       .addCase(signInWithEmail.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Błąd logowania';
+      });
+
+    // Register with email
+    builder
+      .addCase(registerWithEmail.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(registerWithEmail.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAnonymous = false;
+        state.isPro = true;
+      })
+      .addCase(registerWithEmail.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Błąd rejestracji';
       });
 
     // Sign out

@@ -18,7 +18,7 @@ import { RootState, AppDispatch } from '../store/store';
 import {
   fetchShoppingLists,
   addItemToList,
-  toggleItem,
+  toggleItemInList,
   createShoppingList,
   deleteItemFromList,
   shareList,
@@ -75,7 +75,7 @@ const ShoppingListScreen: React.FC = () => {
   };
 
   const handleToggleItem = (listId: string, itemId: string) => {
-    dispatch(toggleItem({ listId, itemId }));
+    dispatch(toggleItemInList({ listId, itemId }));
   };
 
   const handleDeleteItem = (listId: string, itemId: string) => {

@@ -1,168 +1,226 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  Animated,
+  PanResponder,
   TouchableOpacity,
-  Image,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-import { Product } from '../../types/models';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import SwipeableListItem from '../common/SwipeableListItem';
-import { 
-  getFreshnessColor, 
-  formatProductQuantity,
-  getExpiryMessage,
-} from '../../utils/productHelpers';
-import { PRODUCT_CATEGORIES } from '../../constants/categories';
+import { Product } from '../../types/product';
+import { deleteProduct } from '../../store/slices/productsSlice';
+import type { AppDispatch } from '../../store/store';
+// Local design tokens (replace with your theme system if available)
+const colors = {
+  danger: '#F44336',
+  warning: '#FFC107',
+  success: '#4CAF50',
+  white: '#FFFFFF',
+  black: '#000000',
+  textPrimary: '#212121',
+  textSecondary: '#757575',
+};
+const spacing = {
+  xs: 6,
+  sm: 8,
+  md: 12,
+  lg: 16,
+};
+const typography = {
+  h3: { fontSize: 16, fontWeight: '600' as const },
+  body: { fontSize: 14, fontWeight: '400' as const },
+  bodyBold: { fontSize: 14, fontWeight: '700' as const },
+  caption: { fontSize: 12, fontWeight: '400' as const },
+};
 
 interface ProductItemProps {
   product: Product;
-  onDelete: () => void;
-  onConsume: () => void;
-  isPro: boolean;
+  onPress: () => void;
 }
 
-type NavigationProp = StackNavigationProp<RootStackParamList>;
-
-const ProductItem: React.FC<ProductItemProps> = ({
-  product,
-  onDelete,
-  onConsume,
-  isPro,
-}) => {
-  const navigation = useNavigation<NavigationProp>();
-  const category = PRODUCT_CATEGORIES[product.category];
-  const freshnessColor = getFreshnessColor(product.expiryDate);
-  const expiryMessage = getExpiryMessage(product.expiryDate);
-
-  const handlePress = () => {
-    navigation.navigate('ProductDetails', { productId: product.id });
+const ProductItem: React.FC<ProductItemProps> = ({ product, onPress }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const translateX = useRef(new Animated.Value(0)).current;
+  
+  // Calculate days until expiry
+  const daysUntilExpiry = Math.ceil(
+    (new Date(product.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+  );
+  
+  // Get freshness color
+  const getFreshnessColor = () => {
+    if (daysUntilExpiry <= 0) return colors.danger;
+    if (daysUntilExpiry <= 3) return colors.warning;
+    return colors.success;
   };
 
-  const renderContent = () => (
-    <TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
-      <View style={styles.container}>
-        <View style={styles.categoryIcon}>
-          <Icon 
-            name={category.icon} 
-            size={24} 
-            color="#666666"
-            style={[styles.icon, { backgroundColor: category.color }]}
-          />
-        </View>
+  // Pan responder for swipe to delete
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 20;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx < 0) {
+          translateX.setValue(gestureState.dx);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -100) {
+          // Swipe left enough to delete
+          Animated.timing(translateX, {
+            toValue: -1000,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            handleDelete();
+          });
+        } else {
+          // Reset position
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.name} numberOfLines={1}>
-              {product.name}
-            </Text>
-            <View style={[styles.freshnessIndicator, { backgroundColor: freshnessColor }]} />
-          </View>
-
-          <View style={styles.details}>
-            <Text style={styles.quantity}>
-              {formatProductQuantity(product.quantity, product.unit)}
-            </Text>
-            {isPro && product.location && (
-              <>
-                <Text style={styles.separator}>•</Text>
-                <Text style={styles.location}>📍 {product.location}</Text>
-              </>
-            )}
-          </View>
-
-          <Text style={[styles.expiry, { color: freshnessColor }]}>
-            {expiryMessage}
-          </Text>
-        </View>
-
-        {product.imageUrl && (
-          <Image source={{ uri: product.imageUrl }} style={styles.image} />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+  const handleDelete = () => {
+    Alert.alert(
+      'Usuń produkt',
+      `Czy na pewno chcesz usunąć "${product.name}"?`,
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: () => dispatch(deleteProduct(product.id)),
+        },
+      ]
+    );
+  };
 
   return (
-    <SwipeableListItem
-      onSwipeLeft={onDelete}
-      onSwipeRight={onConsume}
-      leftIcon="check-circle"
-      rightIcon="delete"
-      leftColor="#4CAF50"
-      rightColor="#F44336"
-      leftText="Zużyte"
-      rightText="Usuń"
-    >
-      {renderContent()}
-    </SwipeableListItem>
+    <View style={styles.container}>
+      <View style={styles.deleteBackground}>
+        <Icon name="delete" size={24} color={colors.white} />
+      </View>
+      
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <TouchableOpacity 
+          style={styles.content} 
+          onPress={onPress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.leftContent}>
+            <Text style={styles.name}>{product.name}</Text>
+            <Text style={styles.quantity}>{product.quantity}</Text>
+            {!!product.location && (
+              <View style={styles.locationContainer}>
+                <Icon name="map-marker" size={12} color={colors.textSecondary} />
+                <Text style={styles.location}>{product.location}</Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.rightContent}>
+            <View style={[styles.freshnessIndicator, { backgroundColor: getFreshnessColor() }]} />
+            <Text style={styles.daysText}>
+              {daysUntilExpiry > 0 ? `${daysUntilExpiry} dni` : 'Przeterminowane'}
+            </Text>
+            <Text style={styles.dateText}>
+              {new Date(product.expiryDate).toLocaleDateString('pl-PL')}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    padding: 16,
-    alignItems: 'center',
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.xs,
+    position: 'relative',
   },
-  categoryIcon: {
-    marginRight: 12,
+  deleteBackground: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '100%',
+    backgroundColor: colors.danger,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingRight: spacing.lg,
+    borderRadius: 12,
   },
-  icon: {
-    padding: 8,
-    borderRadius: 8,
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
-    flex: 1,
-  },
-  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    padding: spacing.md,
+  },
+  leftContent: {
+    flex: 1,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    flex: 1,
+    ...typography.h3,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  quantity: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  location: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
+  },
+  rightContent: {
+    alignItems: 'flex-end',
   },
   freshnessIndicator: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    marginLeft: 8,
+    marginBottom: spacing.xs,
   },
-  details: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
+  daysText: {
+    ...typography.bodyBold,
+    color: colors.textPrimary,
   },
-  quantity: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  separator: {
-    marginHorizontal: 6,
-    color: '#999999',
-  },
-  location: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  expiry: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  image: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginLeft: 12,
+  dateText: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
 });
 

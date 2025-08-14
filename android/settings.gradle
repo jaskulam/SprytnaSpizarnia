@@ -5,8 +5,8 @@ pluginManagement {
         mavenCentral()
     }
     plugins {
-        id 'org.jetbrains.kotlin.android' version '1.9.20'
-        id 'org.jetbrains.kotlin.jvm' version '1.9.20'
+        id 'org.jetbrains.kotlin.android' version '1.8.22'
+        id 'org.jetbrains.kotlin.jvm' version '1.8.22'
     id 'com.android.application' version '8.2.2'
     id 'com.google.gms.google-services' version '4.4.3'
     }
@@ -15,7 +15,7 @@ pluginManagement {
             if (requested.id.id == 'org.jetbrains.kotlin.android' ||
                     requested.id.id == 'org.jetbrains.kotlin.jvm' ||
                     requested.id.id == 'kotlin-android') {
-                useVersion('1.9.20')
+                useVersion('1.8.22')
             }
         }
     }

@@ -1,0 +1,3 @@
+export const APP_CONFIG = {
+  GOOGLE_WEB_CLIENT_ID: 'YOUR_GOOGLE_WEB_CLIENT_ID',
+};

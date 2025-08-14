@@ -1,7 +1,16 @@
-import { FirebaseOptions } from '@react-native-firebase/app';
-
 // Firebase Configuration for React Native
-export const firebaseConfig: FirebaseOptions = {
+interface FirebaseConfig {
+  projectId: string;
+  appId: string;
+  apiKey: string;
+  authDomain: string;
+  databaseURL: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  measurementId: string;
+}
+
+export const firebaseConfig: FirebaseConfig = {
   // Core Firebase settings
   projectId: process.env.FIREBASE_PROJECT_ID || 'sprytnaspizarnia-dev',
   appId: process.env.FIREBASE_APP_ID || '1:123456789:android:abcdef123456',
@@ -40,7 +49,7 @@ export const environments = {
 };
 
 // Get configuration based on environment
-export const getCurrentFirebaseConfig = (): FirebaseOptions => {
+export const getCurrentFirebaseConfig = (): FirebaseConfig => {
   const env = process.env.NODE_ENV || 'development';
   
   switch (env) {
