@@ -72,3 +72,26 @@ Smart pantry management app built with React Native.
 ## Notes
 
 - The project contains IntelliJ/Android Studio settings in `.idea/`. There is no `.vscode/` workspace by default; a minimal `.vscode` configuration can be provided to help VS Code users.
+
+### Recommended / pinned versions
+
+- Node: tested with `v22.16.0` (LTS, use latest LTS if possible)
+- npm: `v11.4.2` (bundled with Node above)
+- JDK: Eclipse Adoptium Temurin 17 (tested with `17.0.16.8`)
+- Android Emulator: API level 36 (project compile/targetSdk set to 36)
+
+> These are the versions used when this project was last verified; newer versions may work but check compatibility for Gradle/AGP.
+
+### Example `android/local.properties` (DO NOT COMMIT)
+
+Create `android/local.properties` with your local Android SDK path, for example on Windows:
+
+```
+sdk.dir=C:\\Users\\<your-user>\\AppData\\Local\\Android\\sdk
+```
+
+If you use a custom Java installation you can also set Java home locally (prefer setting `org.gradle.java.home` in `android/gradle.properties` instead):
+
+```
+org.gradle.java.home=C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.16.8-hotspot
+```
